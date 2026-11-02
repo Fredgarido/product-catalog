@@ -22,7 +22,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
     {
         var (statusCode, title, detail) = exception switch
         {
-            BusinessRuleException => (StatusCodes.Status400BadRequest, "Business rule violation", exception.Message),
+            BusinessRuleException => (StatusCodes.Status400BadRequest, "Invalid request", exception.Message),
             InsufficientStockException => (StatusCodes.Status409Conflict, "Insufficient stock", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", "Please try again later.")
         };

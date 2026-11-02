@@ -3,5 +3,6 @@
     <Build />
     <Deploy />
   </Project>
+  <Project Path="ProductCatalog.Server.Tests/ProductCatalog.Server.Tests.csproj" />
   <Project Path="ProductCatalog.Server/ProductCatalog.Server.csproj" />
 </Solution>
