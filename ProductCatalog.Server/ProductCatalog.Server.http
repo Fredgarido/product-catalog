@@ -1,0 +1,93 @@
+@baseUrl = http://localhost:5233
+
+### Get all products (expect 200)
+GET {{baseUrl}}/api/products
+
+### Get one product (expect 200)
+GET {{baseUrl}}/api/products/100000
+
+### Get a product that doesn't exist (expect 404)
+GET {{baseUrl}}/api/products/999999
+
+### Get all categories (expect 200)
+GET {{baseUrl}}/api/categories
+
+### Create a product (expect 201)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Lens 20x",
+  "description": "Created from the .http file",
+  "price": 299.99,
+  "stockQuantity": 10,
+  "categoryId": 2
+}
+
+### Create with invalid data (expect 400)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": " ",
+  "price": -5,
+  "categoryId": 1
+}
+
+### Create with a category that doesn't exist (expect 500)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Ghost Product",
+  "price": 10,
+  "stockQuantity": 1,
+  "categoryId": 99
+}
+
+### Update the new product (expect 200)
+PUT {{baseUrl}}/api/products/100012
+Content-Type: application/json
+
+{
+  "name": "Test Lens 20x (updated)",
+  "description": null,
+  "price": 279.99,
+  "categoryId": 2
+}
+
+### Delete it (expect 204)
+DELETE {{baseUrl}}/api/products/100012
+
+### Delete it again (expect 404)
+DELETE {{baseUrl}}/api/products/100012
+
+### Search by partial name (expect 200)
+GET {{baseUrl}}/api/products/search?name=lens
+
+### Search is case-insensitive (expect the same 3)
+GET {{baseUrl}}/api/products/search?name=LENS
+
+### Search without a name (expect 400)
+GET {{baseUrl}}/api/products/search
+
+### Stock between 0 and 10 (expect 200, low-stock products)
+GET {{baseUrl}}/api/products/stock-level?min=0&max=10
+
+### min greater than max (expect 400)
+GET {{baseUrl}}/api/products/stock-level?min=50&max=10
+
+### Add 5 units to the CM-100 microscope (expect 200, stock 12 → 17)
+POST {{baseUrl}}/api/products/100000/add-to-stock/5
+
+### Remove 2 units (expect 200, stock 17 → 15)
+POST {{baseUrl}}/api/products/100000/decrement-stock/2
+
+### Remove more than available (expect 500)
+POST {{baseUrl}}/api/products/100000/decrement-stock/1000
+
+### Quantity 0 (expect 400)
+POST {{baseUrl}}/api/products/100000/add-to-stock/0
+
+### Product that doesn't exist (expect 404)
+POST {{baseUrl}}/api/products/999999/add-to-stock/5

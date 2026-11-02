@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="productcatalog.client/productcatalog.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="ProductCatalog.Server/ProductCatalog.Server.csproj" />
+</Solution>
