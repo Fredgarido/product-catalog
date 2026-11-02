@@ -1,1 +1,59 @@
-<h2>Products</h2>
+<div class="page-header">
+  <h2>Products</h2>
+  @if (!loading() && !error()) {
+    <p class="summary">{{ products().length }} products · {{ totalStock() }} units in stock</p>
+  }
+</div>
+
+@if (loading()) {
+  <p class="state">Loading products...</p>
+} @else if (error()) {
+  <div class="state state-error">
+    <p>{{ error() }}</p>
+    <button type="button" (click)="loadProducts()">Retry</button>
+  </div>
+} @else {
+  <table class="product-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th class="numeric">Price</th>
+        <th class="numeric">Stock</th>
+        <th>Last updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of products(); track product.id) {
+        <tr>
+          <td>{{ product.id }}</td>
+          <td>
+            <div class="product-name">{{ product.name }}</div>
+            @if (product.description) {
+              <div class="product-description">{{ product.description }}</div>
+            }
+          </td>
+          <td>{{ product.categoryName }}</td>
+          <td class="numeric">{{ product.price | currency: 'EUR' }}</td>
+          <td class="numeric">
+            <span
+              class="stock"
+              [class.stock-out]="product.stockQuantity === 0"
+              [class.stock-low]="
+                product.stockQuantity > 0 && product.stockQuantity <= lowStockThreshold
+              "
+            >
+              {{ product.stockQuantity }}
+            </span>
+          </td>
+          <td>{{ product.updatedAt | date: 'medium' }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="state">No products found.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
