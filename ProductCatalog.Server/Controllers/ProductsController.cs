@@ -34,6 +34,10 @@ public sealed class ProductsController : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
+    /// <summary>
+    /// Searches products whose name contains the given text (case-insensitive, partial match).
+    /// </summary>
+    /// <param name="name">Text to search for, for example "lens".</param>
     [HttpGet("search")]
     [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -45,6 +49,9 @@ public sealed class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    /// <summary>
+    /// Returns products whose stock is between <paramref name="min"/> and <paramref name="max"/>, both inclusive.
+    /// </summary>
     [HttpGet("stock-level")]
     [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -72,6 +79,9 @@ public sealed class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
     }
 
+    /// <summary>
+    /// Adds stock atomically. Safe under concurrent requests.
+    /// </summary>
     [HttpPost("{id:int}/add-to-stock/{quantity:int}")]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -85,6 +95,9 @@ public sealed class ProductsController : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
+    /// <summary>
+    /// Removes stock atomically. Returns 409 Conflict if there is not enough stock; the stock is then left unchanged.
+    /// </summary>
     [HttpPost("{id:int}/decrement-stock/{quantity:int}")]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -99,6 +112,9 @@ public sealed class ProductsController : ControllerBase
         return product is null ? NotFound() : Ok(product);
     }
 
+    /// <summary>
+    /// Updates name, description, price and category. Stock is not changed here; use the stock endpoints.
+    /// </summary>
     [HttpPut("{id:int}")]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
