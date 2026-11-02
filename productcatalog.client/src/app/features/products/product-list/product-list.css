@@ -116,3 +116,17 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.button-primary {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.action-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}

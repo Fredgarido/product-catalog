@@ -3,6 +3,7 @@
   @if (!loading() && !error() && !rangeError()) {
     <p class="summary">{{ products().length }} products · {{ totalStock() }} units in stock</p>
   }
+  <a routerLink="/products/new" class="button-primary">New product</a>
 </div>
 
 <div class="filters">
@@ -67,6 +68,7 @@
         <th class="numeric">Price</th>
         <th class="numeric">Stock</th>
         <th>Last updated</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -93,10 +95,13 @@
             </span>
           </td>
           <td>{{ product.updatedAt | date: 'medium' }}</td>
+          <td>
+            <a [routerLink]="['/products', product.id, 'edit']" class="action-link">Edit</a>
+          </td>
         </tr>
       } @empty {
         <tr>
-          <td colspan="6" class="state">
+          <td colspan="7" class="state">
             {{ hasActiveFilters() ? 'No products match your filters.' : 'No products found.' }}
           </td>
         </tr>

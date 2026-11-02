@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common'
 import { Component, computed, inject, signal } from '@angular/core'
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop'
+import { RouterLink } from '@angular/router'
 import { EMPTY, Observable, catchError, debounceTime, map, switchMap, tap } from 'rxjs'
 import { Product } from '../../../core/models/product'
 import { ProductApi } from '../../../core/services/product-api'
@@ -16,7 +17,7 @@ const maxStockLevel = 2_147_483_647
 
 @Component({
   selector: 'app-product-list',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, RouterLink],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })
