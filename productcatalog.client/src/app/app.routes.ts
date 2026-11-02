@@ -6,7 +6,7 @@ export const routes: Routes = [
     path: 'products',
     title: 'Products',
     loadComponent: () =>
-      import('./features/products/product-list/product-list').then((m) => m.ProductList)
+      import('./features/products/product-list/product-list').then((m) => m.ProductList),
   },
-  { path: '**', redirectTo: 'products' }
+  { path: '**', redirectTo: 'products' },
 ]

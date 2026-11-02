@@ -1,9 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core'
+import { ProductApi } from '../../../core/services/product-api'
 
 @Component({
-  imports: [],
   selector: 'app-product-list',
-  styleUrl: './product-list.css',
+  imports: [],
   templateUrl: './product-list.html',
+  styleUrl: './product-list.css',
 })
-export class ProductList {}
+export class ProductList {
+  private readonly productApi = inject(ProductApi)
+
+  constructor() {
+    this.productApi.getAll().subscribe((products) => {
+      console.log('Products from the API:', products)
+    })
+  }
+}
