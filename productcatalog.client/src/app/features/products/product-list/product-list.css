@@ -74,3 +74,45 @@
 .state-error {
   color: #991b1b;
 }
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.filter input {
+  width: 7rem;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.filter-search {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.filter-search input {
+  width: auto;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}

@@ -1,16 +1,61 @@
 <div class="page-header">
   <h2>Products</h2>
-  @if (!loading() && !error()) {
+  @if (!loading() && !error() && !rangeError()) {
     <p class="summary">{{ products().length }} products · {{ totalStock() }} units in stock</p>
   }
 </div>
 
-@if (loading()) {
+<div class="filters">
+  <label class="filter filter-search">
+    <span>Search by name</span>
+    <input
+      #searchInput
+      type="search"
+      placeholder="e.g. lens"
+      maxlength="100"
+      [value]="searchTerm()"
+      (input)="searchTerm.set(searchInput.value)"
+    />
+  </label>
+
+  <label class="filter">
+    <span>Min stock</span>
+    <input
+      #minInput
+      type="number"
+      min="0"
+      step="1"
+      [value]="minStock() ?? ''"
+      (input)="setMinStock(minInput.value)"
+    />
+  </label>
+
+  <label class="filter">
+    <span>Max stock</span>
+    <input
+      #maxInput
+      type="number"
+      min="0"
+      step="1"
+      [value]="maxStock() ?? ''"
+      (input)="setMaxStock(maxInput.value)"
+    />
+  </label>
+
+  <div class="filter-actions">
+    <button type="button" (click)="showLowStock()">Low stock</button>
+    <button type="button" (click)="clearFilters()" [disabled]="!hasActiveFilters()">Clear</button>
+  </div>
+</div>
+
+@if (rangeError()) {
+  <p class="state state-error">{{ rangeError() }}</p>
+} @else if (loading()) {
   <p class="state">Loading products...</p>
 } @else if (error()) {
   <div class="state state-error">
     <p>{{ error() }}</p>
-    <button type="button" (click)="loadProducts()">Retry</button>
+    <button type="button" (click)="retry()">Retry</button>
   </div>
 } @else {
   <table class="product-table">
@@ -51,7 +96,9 @@
         </tr>
       } @empty {
         <tr>
-          <td colspan="6" class="state">No products found.</td>
+          <td colspan="6" class="state">
+            {{ hasActiveFilters() ? 'No products match your filters.' : 'No products found.' }}
+          </td>
         </tr>
       }
     </tbody>
