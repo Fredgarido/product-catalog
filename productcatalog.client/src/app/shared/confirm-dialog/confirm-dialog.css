@@ -1,0 +1,26 @@
+.dialog {
+  width: min(90vw, 420px);
+  padding: 1.5rem;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.dialog::backdrop {
+  background: rgba(17, 24, 39, 0.5);
+}
+
+.dialog-title {
+  margin-top: 0;
+}
+
+.dialog-message {
+  color: #4b5563;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

@@ -38,7 +38,15 @@
     <div class="field-row">
       <label class="field">
         <span>Price (€) *</span>
-        <input type="number" formControlName="price" step="0.01" [min]="limits.priceMin" />
+        <input
+          #priceInput
+          type="number"
+          formControlName="price"
+          step="0.05"
+          min="0"
+          inputmode="decimal"
+          (wheel)="priceInput.blur()"
+        />
         @if (fieldError('price'); as message) {
           <small class="field-error">{{ message }}</small>
         }

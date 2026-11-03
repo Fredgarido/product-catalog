@@ -9,3 +9,48 @@ body {
   background: #f9fafb;
   color: #111827;
 }
+
+.button-primary,
+.button-secondary,
+.button-danger {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.button-secondary {
+  background: #ffffff;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.button-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-error {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.field-error {
+  color: #dc2626;
+}

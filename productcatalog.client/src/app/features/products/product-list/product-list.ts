@@ -2,9 +2,12 @@ import { CurrencyPipe, DatePipe } from '@angular/common'
 import { Component, computed, inject, signal } from '@angular/core'
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop'
 import { RouterLink } from '@angular/router'
+import { HttpErrorResponse } from '@angular/common/http'
 import { EMPTY, Observable, catchError, debounceTime, map, switchMap, tap } from 'rxjs'
 import { Product } from '../../../core/models/product'
 import { ProductApi } from '../../../core/services/product-api'
+import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog'
+import { StockDialog } from '../stock-dialog/stock-dialog'
 
 interface ProductFilters {
   name: string
@@ -17,7 +20,7 @@ const maxStockLevel = 2_147_483_647
 
 @Component({
   selector: 'app-product-list',
-  imports: [CurrencyPipe, DatePipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, ConfirmDialog, StockDialog],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })
@@ -50,6 +53,16 @@ export class ProductList {
   protected readonly hasActiveFilters = computed(
     () => this.searchTerm().trim() !== '' || this.minStock() !== null || this.maxStock() !== null,
   )
+
+  protected readonly stockProduct = signal<Product | null>(null)
+  protected readonly productToDelete = signal<Product | null>(null)
+  protected readonly deleting = signal(false)
+  protected readonly deleteError = signal<string | null>(null)
+
+  protected readonly deleteMessage = computed(() => {
+    const product = this.productToDelete()
+    return product ? `Delete "${product.name}" (ID ${product.id})? This cannot be undone.` : ''
+  })
 
   private readonly filters = computed<ProductFilters>(() => ({
     name: this.searchTerm().trim(),
@@ -89,6 +102,48 @@ export class ProductList {
 
   protected retry(): void {
     this.reloadCount.update((count) => count + 1)
+  }
+
+  protected onStockChanged(updated: Product): void {
+    this.products.update((products) =>
+      products.map((product) => (product.id === updated.id ? updated : product)),
+    )
+    this.stockProduct.set(null)
+  }
+
+  protected askDelete(product: Product): void {
+    this.deleteError.set(null)
+    this.productToDelete.set(product)
+  }
+
+  protected deleteProduct(): void {
+    const product = this.productToDelete()
+
+    if (!product) {
+      return
+    }
+
+    this.deleting.set(true)
+    this.deleteError.set(null)
+
+    this.productApi.delete(product.id).subscribe({
+      next: () => this.removeFromList(product.id),
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 404) {
+          this.removeFromList(product.id)
+          return
+        }
+
+        this.deleting.set(false)
+        this.deleteError.set('Could not delete the product. Please try again.')
+      },
+    })
+  }
+
+  private removeFromList(id: number): void {
+    this.products.update((products) => products.filter((product) => product.id !== id))
+    this.productToDelete.set(null)
+    this.deleting.set(false)
   }
 
   private loadProducts(filters: ProductFilters): Observable<Product[]> {

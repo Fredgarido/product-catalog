@@ -1,0 +1,29 @@
+<app-confirm-dialog
+  [open]="product() !== null"
+  [title]="'Adjust stock: ' + (product()?.name ?? '')"
+  [message]="'Current stock: ' + (product()?.stockQuantity ?? 0)"
+  [confirmLabel]="mode() === 'add' ? 'Add stock' : 'Remove stock'"
+  [busy]="saving()"
+  (confirmed)="apply()"
+  (cancelled)="closed.emit()"
+>
+  <div class="mode-toggle" role="group" aria-label="Stock operation">
+    <button type="button" [class.active]="mode() === 'add'" (click)="mode.set('add')">Add</button>
+    <button type="button" [class.active]="mode() === 'remove'" (click)="mode.set('remove')">
+      Remove
+    </button>
+  </div>
+
+  <label class="field">
+    <span>Quantity</span>
+    <input type="number" min="1" step="1" [max]="limits.stockMax" [formControl]="quantity" />
+  </label>
+
+  @if (quantity.touched && quantity.invalid) {
+    <small class="field-error">Enter a whole number between 1 and {{ limits.stockMax }}.</small>
+  }
+
+  @if (error()) {
+    <p class="form-error">{{ error() }}</p>
+  }
+</app-confirm-dialog>

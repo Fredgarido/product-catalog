@@ -1,0 +1,24 @@
+<dialog #dialog class="dialog" (cancel)="onCancel($event)">
+  <h3 class="dialog-title">{{ title() }}</h3>
+
+  @if (message()) {
+    <p class="dialog-message">{{ message() }}</p>
+  }
+
+  <ng-content />
+
+  <div class="dialog-actions">
+    <button type="button" class="button-secondary" [disabled]="busy()" (click)="cancelled.emit()">
+      Cancel
+    </button>
+    <button
+      type="button"
+      [class.button-primary]="variant() === 'primary'"
+      [class.button-danger]="variant() === 'danger'"
+      [disabled]="busy()"
+      (click)="confirmed.emit()"
+    >
+      {{ busy() ? 'Working...' : confirmLabel() }}
+    </button>
+  </div>
+</dialog>

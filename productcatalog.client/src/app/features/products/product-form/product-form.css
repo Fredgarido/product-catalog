@@ -45,10 +45,6 @@
   gap: 1rem;
 }
 
-.field-error {
-  color: #dc2626;
-}
-
 .hint {
   color: #6b7280;
 }
@@ -59,44 +55,10 @@
   font-weight: 600;
 }
 
-.form-error {
-  margin: 0;
-  padding: 0.75rem;
-  border-radius: 6px;
-  background: #fee2e2;
-  color: #991b1b;
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-}
-
-.button-primary,
-.button-secondary {
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  font: inherit;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.button-primary {
-  border: none;
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.button-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.button-secondary {
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #374151;
 }
 
 .state {

@@ -96,7 +96,15 @@
           </td>
           <td>{{ product.updatedAt | date: 'medium' }}</td>
           <td>
-            <a [routerLink]="['/products', product.id, 'edit']" class="action-link">Edit</a>
+            <div class="actions">
+              <a [routerLink]="['/products', product.id, 'edit']" class="action-link">Edit</a>
+              <button type="button" class="action-link" (click)="stockProduct.set(product)">
+                Stock
+              </button>
+              <button type="button" class="action-link action-danger" (click)="askDelete(product)">
+                Delete
+              </button>
+            </div>
           </td>
         </tr>
       } @empty {
@@ -109,3 +117,23 @@
     </tbody>
   </table>
 }
+<app-stock-dialog
+  [product]="stockProduct()"
+  (stockChanged)="onStockChanged($event)"
+  (closed)="stockProduct.set(null)"
+/>
+
+<app-confirm-dialog
+  [open]="productToDelete() !== null"
+  title="Delete product"
+  [message]="deleteMessage()"
+  confirmLabel="Delete"
+  variant="danger"
+  [busy]="deleting()"
+  (confirmed)="deleteProduct()"
+  (cancelled)="productToDelete.set(null)"
+>
+  @if (deleteError()) {
+    <p class="form-error">{{ deleteError() }}</p>
+  }
+</app-confirm-dialog>
