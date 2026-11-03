@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProductCatalog.Server.Data;
 using ProductCatalog.Server.ErrorHandling;
+using ProductCatalog.Server.Repositories;
 using ProductCatalog.Server.Services;
 using Scalar.AspNetCore;
 
@@ -15,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .UseSeeding((context, _) => DatabaseSeeder.Seed(context))
         .UseAsyncSeeding((context, _, cancellationToken) => DatabaseSeeder.SeedAsync(context, cancellationToken)));
 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddProblemDetails();

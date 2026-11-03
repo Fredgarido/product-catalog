@@ -1,39 +1,37 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ProductCatalog.Server.Data;
-using ProductCatalog.Server.Dtos;
+﻿using ProductCatalog.Server.Dtos;
 using ProductCatalog.Server.Entities;
 using ProductCatalog.Server.Exceptions;
 using ProductCatalog.Server.Mappings;
+using ProductCatalog.Server.Repositories;
 
 namespace ProductCatalog.Server.Services;
 
 public sealed class ProductService : IProductService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IProductRepository _productRepository;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly ILogger<ProductService> _logger;
 
-    public ProductService(AppDbContext dbContext, ILogger<ProductService> logger)
+    public ProductService(
+        IProductRepository productRepository,
+        ICategoryRepository categoryRepository,
+        ILogger<ProductService> logger)
     {
-        _dbContext = dbContext;
+        _productRepository = productRepository;
+        _categoryRepository = categoryRepository;
         _logger = logger;
     }
 
     public async Task<IReadOnlyList<ProductDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Products
-            .AsNoTracking()
-            .OrderBy(p => p.Name)
-            .SelectDto()
-            .ToListAsync(cancellationToken);
+        var products = await _productRepository.GetAllAsync(cancellationToken);
+        return products.ToDtos();
     }
 
     public async Task<ProductDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.Id == id)
-            .SelectDto()
-            .FirstOrDefaultAsync(cancellationToken);
+        var product = await _productRepository.GetByIdAsync(id, cancellationToken);
+        return product?.ToDto();
     }
 
     public async Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken)
@@ -53,8 +51,7 @@ public sealed class ProductService : IProductService
             UpdatedAt = now
         };
 
-        _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _productRepository.AddAsync(product, cancellationToken);
 
         _logger.LogInformation("Created product {ProductId} ({ProductName})", product.Id, product.Name);
 
@@ -63,8 +60,7 @@ public sealed class ProductService : IProductService
 
     public async Task<ProductDto?> UpdateAsync(int id, UpdateProductRequest request, CancellationToken cancellationToken)
     {
-        var product = await _dbContext.Products
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        var product = await _productRepository.GetForUpdateAsync(id, cancellationToken);
 
         if (product is null)
         {
@@ -83,7 +79,7 @@ public sealed class ProductService : IProductService
         product.CategoryId = categoryId;
         product.UpdatedAt = DateTime.UtcNow;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _productRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Updated product {ProductId}", id);
 
@@ -92,53 +88,33 @@ public sealed class ProductService : IProductService
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken)
     {
-        var deletedRows = await _dbContext.Products
-            .Where(p => p.Id == id)
-            .ExecuteDeleteAsync(cancellationToken);
+        var deleted = await _productRepository.DeleteAsync(id, cancellationToken);
 
-        if (deletedRows > 0)
+        if (deleted)
         {
             _logger.LogInformation("Deleted product {ProductId}", id);
         }
 
-        return deletedRows > 0;
+        return deleted;
     }
 
     public async Task<IReadOnlyList<ProductDto>> SearchByNameAsync(string name, CancellationToken cancellationToken)
     {
-        var term = name.Trim();
-
-        return await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.Name.Contains(term))
-            .OrderBy(p => p.Name)
-            .SelectDto()
-            .ToListAsync(cancellationToken);
+        var products = await _productRepository.SearchByNameAsync(name.Trim(), cancellationToken);
+        return products.ToDtos();
     }
 
     public async Task<IReadOnlyList<ProductDto>> GetByStockLevelAsync(int min, int max, CancellationToken cancellationToken)
     {
-        return await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.StockQuantity >= min && p.StockQuantity <= max)
-            .OrderBy(p => p.StockQuantity)
-            .ThenBy(p => p.Name)
-            .SelectDto()
-            .ToListAsync(cancellationToken);
+        var products = await _productRepository.GetByStockLevelAsync(min, max, cancellationToken);
+        return products.ToDtos();
     }
 
     public async Task<ProductDto?> AddStockAsync(int id, int quantity, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var added = await _productRepository.AddStockAsync(id, quantity, DateTime.UtcNow, cancellationToken);
 
-        var updatedRows = await _dbContext.Products
-            .Where(p => p.Id == id)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(p => p.StockQuantity, p => p.StockQuantity + quantity)
-                .SetProperty(p => p.UpdatedAt, now),
-                cancellationToken);
-
-        if (updatedRows == 0)
+        if (!added)
         {
             return null;
         }
@@ -150,19 +126,11 @@ public sealed class ProductService : IProductService
 
     public async Task<ProductDto?> DecrementStockAsync(int id, int quantity, CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
+        var decremented = await _productRepository.TryDecrementStockAsync(id, quantity, DateTime.UtcNow, cancellationToken);
 
-        var updatedRows = await _dbContext.Products
-            .Where(p => p.Id == id && p.StockQuantity >= quantity)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(p => p.StockQuantity, p => p.StockQuantity - quantity)
-                .SetProperty(p => p.UpdatedAt, now),
-                cancellationToken);
-
-        if (updatedRows == 0)
+        if (!decremented)
         {
-            var exists = await _dbContext.Products.AnyAsync(p => p.Id == id, cancellationToken);
-            if (!exists)
+            if (!await _productRepository.ExistsAsync(id, cancellationToken))
             {
                 return null;
             }
@@ -178,10 +146,7 @@ public sealed class ProductService : IProductService
 
     private async Task EnsureCategoryExistsAsync(int categoryId, CancellationToken cancellationToken)
     {
-        var exists = await _dbContext.Categories
-            .AnyAsync(c => c.Id == categoryId, cancellationToken);
-
-        if (!exists)
+        if (!await _categoryRepository.ExistsAsync(categoryId, cancellationToken))
         {
             throw new BusinessRuleException($"Category with id {categoryId} does not exist.");
         }

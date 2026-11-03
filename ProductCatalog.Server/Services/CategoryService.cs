@@ -1,24 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ProductCatalog.Server.Data;
-using ProductCatalog.Server.Dtos;
+﻿using ProductCatalog.Server.Dtos;
+using ProductCatalog.Server.Repositories;
 
 namespace ProductCatalog.Server.Services;
 
 public sealed class CategoryService : ICategoryService
 {
-    private readonly AppDbContext _dbContext;
+    private readonly ICategoryRepository _categoryRepository;
 
-    public CategoryService(AppDbContext dbContext)
+    public CategoryService(ICategoryRepository categoryRepository)
     {
-        _dbContext = dbContext;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<IReadOnlyList<CategoryDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await _dbContext.Categories
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new CategoryDto(c.Id, c.Name))
-            .ToListAsync(cancellationToken);
+        var categories = await _categoryRepository.GetAllAsync(cancellationToken);
+        return categories.Select(c => new CategoryDto(c.Id, c.Name)).ToList();
     }
 }

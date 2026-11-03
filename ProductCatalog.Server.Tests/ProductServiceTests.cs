@@ -2,6 +2,7 @@
 using ProductCatalog.Server.Data;
 using ProductCatalog.Server.Dtos;
 using ProductCatalog.Server.Exceptions;
+using ProductCatalog.Server.Repositories;
 using ProductCatalog.Server.Services;
 
 namespace ProductCatalog.Server.Tests;
@@ -162,7 +163,10 @@ public sealed class ProductServiceTests : IClassFixture<DatabaseFixture>
 
     private static ProductService CreateService(AppDbContext context)
     {
-        return new ProductService(context, NullLogger<ProductService>.Instance);
+        return new ProductService(
+            new ProductRepository(context),
+            new CategoryRepository(context),
+            NullLogger<ProductService>.Instance);
     }
 
     private async Task<ProductDto> CreateProductAsync(int stock = 10, string name = "Test Product")

@@ -45,17 +45,44 @@ Then open **https://localhost:65117**.
 
 On the first run in Development, the API **creates the database, applies the migrations and seeds sample data** (4 categories, 12 products). No manual database step is needed.
 
-### macOS / Linux (no LocalDB)
+### Without LocalDB (macOS, Linux, or Windows with Docker)
 
-Run SQL Server in Docker and point the API at it with an environment variable:
+Run SQL Server in Docker and point the API at it with an environment variable. No code changes are needed: the variable overrides the connection string in `appsettings.json`, and the database is created and seeded on startup as usual.
 
-```bash
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Your_password123" \
-  -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+1. Start SQL Server:
 
-export ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
-dotnet run --project ProductCatalog.Server --launch-profile https
-```
+   ```bash
+   docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Your_password123" \
+     -p 1433:1433 -d --name productcatalog-sql mcr.microsoft.com/mssql/server:2022-latest
+   ```
+
+2. Wait until it's ready (10–30 seconds). Otherwise the API can't connect and stops on startup:
+
+   ```bash
+   docker logs -f productcatalog-sql
+   ```
+
+   When *"SQL Server is now ready for client connections"* appears, press **Ctrl + C**.
+
+3. Set the connection string and run the API.
+
+   macOS / Linux:
+
+   ```bash
+   export ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+   dotnet run --project ProductCatalog.Server --launch-profile https
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   $env:ConnectionStrings__DefaultConnection = "Server=localhost,1433;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+   dotnet run --project ProductCatalog.Server --launch-profile https
+   ```
+
+On Apple Silicon Macs, the SQL Server image runs through emulation: enable *Use Rosetta for x86_64/amd64 emulation* in Docker Desktop's settings.
+
+The backend tests still need LocalDB (see [Possible next steps](#possible-next-steps)).
 
 ### API documentation
 
@@ -129,10 +156,33 @@ The spec allows extra fields and relationships, so products belong to a **Catego
 
 ### Layered backend
 
-- **Controller → Service → EF Core.** Controllers handle HTTP only; business rules live in services.
-- **DTOs are separate from entities**, so the database shape never leaks into the API contract. Queries project directly to DTOs.
+Requests flow through **Controller → Service → Repository → Database**, and each layer has one job:
+
+| Layer | Responsibility | Knows about |
+|---|---|---|
+| **Controller** | HTTP: routes, status codes, input validation | services and DTOs |
+| **Service** | business rules: trimming input, checking the category exists, deciding between "not found" and "insufficient stock", timestamps, logging | repository interfaces, entities, DTOs |
+| **Repository** | data access: EF Core queries and atomic SQL updates | `AppDbContext` and entities |
+
+- **Services don't depend on EF Core**, only on repository interfaces (`IProductRepository`, `ICategoryRepository`), so business rules and data access stay separate.
+- **Repositories have intention-revealing methods** (`TryDecrementStockAsync`, `GetByStockLevelAsync`) rather than a generic CRUD interface, so EF Core features such as `ExecuteUpdateAsync` stay available where they matter. The atomic stock update lives in the repository, because atomicity is a data-access guarantee; what a failed decrement *means* (404 or 409) is decided in the service.
+- **Repositories return entities; services map them to DTOs**, so the database shape never leaks into the API contract.
 - **A global exception handler** turns business-rule exceptions into 400 or 409 responses, and anything unexpected into a generic 500 that doesn't expose internal details.
 - **Migrations are applied at startup in Development only.** In production they would run as a deployment step.
+
+### Why a repository layer
+
+The first version of the services used EF Core's `DbContext` directly. That's a common .NET approach, since `DbContext` already implements the Repository and Unit of Work patterns. It was refactored to add repositories for three reasons:
+
+- **Cleaner separation of concerns.** With `DbContext` in the services, every method mixed business rules with query code. Now the services read as business logic only, and each entity's queries live in one place.
+- **The business layer no longer depends on EF Core.** Services only know repository interfaces, so how data is stored can change without touching the business rules.
+- **It's the layering most teams expect** (Controller → Service → Repository → Database), which makes the code easier to navigate for anyone joining the project.
+
+Trade-offs accepted:
+
+- More code: an interface and a class per entity.
+- Reads load full entities (with their category) instead of selecting only the columns the DTO needs. The difference is negligible at this size, and a dedicated read query could be added if it ever mattered.
+- The backend tests remain integration tests against SQL Server: the concurrency guarantees are enforced by the database, so a fake repository couldn't prove them.
 
 ### Frontend
 
@@ -162,10 +212,11 @@ ProductCatalog.slnx
 ├── ProductCatalog.Server/           ASP.NET Core Web API
 │   ├── Controllers/                 HTTP endpoints
 │   ├── Services/                    business logic
+│   ├── Repositories/                data access (EF Core queries)
 │   ├── Data/                        DbContext, entity configurations, seeding
 │   ├── Entities/                    database models
 │   ├── Dtos/                        API request and response models
-│   ├── Mappings/                    entity → DTO projections
+│   ├── Mappings/                    entity → DTO mapping
 │   ├── Exceptions/                  business-rule exceptions
 │   ├── ErrorHandling/               global exception → ProblemDetails
 │   └── Migrations/                  EF Core migrations

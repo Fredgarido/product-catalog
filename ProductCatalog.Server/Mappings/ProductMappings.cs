@@ -5,17 +5,22 @@ namespace ProductCatalog.Server.Mappings;
 
 public static class ProductMappings
 {
-    public static IQueryable<ProductDto> SelectDto(this IQueryable<Product> query)
+    public static ProductDto ToDto(this Product product)
     {
-        return query.Select(p => new ProductDto(
-            p.Id,
-            p.Name,
-            p.Description,
-            p.Price,
-            p.StockQuantity,
-            p.CategoryId,
-            p.Category.Name,
-            p.CreatedAt,
-            p.UpdatedAt));
+        return new ProductDto(
+            product.Id,
+            product.Name,
+            product.Description,
+            product.Price,
+            product.StockQuantity,
+            product.CategoryId,
+            product.Category.Name,
+            product.CreatedAt,
+            product.UpdatedAt);
+    }
+
+    public static IReadOnlyList<ProductDto> ToDtos(this IEnumerable<Product> products)
+    {
+        return products.Select(ToDto).ToList();
     }
 }
