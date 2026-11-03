@@ -1,43 +1,21 @@
 .back-link {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: #2563eb;
-  text-decoration: none;
+  margin-bottom: 0.5rem;
+}
+
+.page-title {
+  margin: 0 0 1.5rem;
+  font: var(--mat-sys-headline-small);
+}
+
+.form-card {
+  max-width: 640px;
 }
 
 .product-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  max-width: 640px;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  flex: 1;
-  font-size: 0.9rem;
-  color: #374151;
-}
-
-.field input,
-.field textarea,
-.field select {
-  padding: 0.55rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font: inherit;
-}
-
-.field input.ng-invalid.ng-touched,
-.field textarea.ng-invalid.ng-touched,
-.field select.ng-invalid.ng-touched {
-  border-color: #dc2626;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .field-row {
@@ -45,28 +23,24 @@
   gap: 1rem;
 }
 
-.hint {
-  color: #6b7280;
-}
-
-.readonly-value {
-  margin: 0;
-  padding: 0.55rem 0;
-  font-weight: 600;
+.field-row > mat-form-field {
+  flex: 1;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
-.state {
-  padding: 2rem;
-  text-align: center;
-  color: #6b7280;
-}
+@media (max-width: 600px) {
+  .field-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-.state-error {
-  color: #991b1b;
+  .form-actions {
+    flex-direction: column-reverse;
+  }
 }

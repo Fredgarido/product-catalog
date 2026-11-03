@@ -1,8 +1,14 @@
 import { CurrencyPipe, DatePipe } from '@angular/common'
+import { HttpErrorResponse } from '@angular/common/http'
 import { Component, computed, inject, signal } from '@angular/core'
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop'
+import { MatButton, MatIconButton } from '@angular/material/button'
+import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field'
+import { MatIcon } from '@angular/material/icon'
+import { MatInput } from '@angular/material/input'
+import { MatProgressSpinner } from '@angular/material/progress-spinner'
+import { MatTooltip } from '@angular/material/tooltip'
 import { RouterLink } from '@angular/router'
-import { HttpErrorResponse } from '@angular/common/http'
 import { EMPTY, Observable, catchError, debounceTime, map, switchMap, tap } from 'rxjs'
 import { Product } from '../../../core/models/product'
 import { ProductApi } from '../../../core/services/product-api'
@@ -20,7 +26,22 @@ const maxStockLevel = 2_147_483_647
 
 @Component({
   selector: 'app-product-list',
-  imports: [CurrencyPipe, DatePipe, RouterLink, ConfirmDialog, StockDialog],
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    RouterLink,
+    MatButton,
+    MatIconButton,
+    MatFormField,
+    MatLabel,
+    MatPrefix,
+    MatIcon,
+    MatInput,
+    MatProgressSpinner,
+    MatTooltip,
+    ConfirmDialog,
+    StockDialog,
+  ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.css',
 })

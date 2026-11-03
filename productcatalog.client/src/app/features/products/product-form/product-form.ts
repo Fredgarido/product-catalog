@@ -7,6 +7,13 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms'
+import { MatButton } from '@angular/material/button'
+import { MatCard, MatCardContent } from '@angular/material/card'
+import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field'
+import { MatIcon } from '@angular/material/icon'
+import { MatInput } from '@angular/material/input'
+import { MatProgressSpinner } from '@angular/material/progress-spinner'
+import { MatOption, MatSelect } from '@angular/material/select'
 import { Router, RouterLink } from '@angular/router'
 import { Category } from '../../../core/models/category'
 import { ValidationProblemDetails } from '../../../core/models/problem-details'
@@ -25,7 +32,23 @@ function notBlank(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-product-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatButton,
+    MatCard,
+    MatCardContent,
+    MatError,
+    MatFormField,
+    MatHint,
+    MatLabel,
+    MatSuffix,
+    MatIcon,
+    MatInput,
+    MatProgressSpinner,
+    MatOption,
+    MatSelect,
+  ],
   templateUrl: './product-form.html',
   styleUrl: './product-form.css',
 })
@@ -39,7 +62,6 @@ export class ProductForm implements OnInit {
 
   protected readonly limits = limits
   protected readonly categories = signal<Category[]>([])
-  protected readonly currentStock = signal<number | null>(null)
   protected readonly loading = signal(false)
   protected readonly saving = signal(false)
   protected readonly loadError = signal<string | null>(null)
@@ -163,9 +185,9 @@ export class ProductForm implements OnInit {
           name: product.name,
           description: product.description ?? '',
           price: product.price,
+          stockQuantity: product.stockQuantity,
           categoryId: product.categoryId,
         })
-        this.currentStock.set(product.stockQuantity)
         this.loading.set(false)
       },
       error: (error: HttpErrorResponse) => {

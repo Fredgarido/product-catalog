@@ -1,39 +1,12 @@
 .mode-toggle {
   display: flex;
   margin-bottom: 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
 }
 
-.mode-toggle button {
+.mode-toggle mat-button-toggle {
   flex: 1;
-  padding: 0.5rem;
-  border: none;
-  background: #ffffff;
-  font: inherit;
-  cursor: pointer;
 }
 
-.mode-toggle button.active {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.5rem;
-}
-
-.field input {
-  padding: 0.55rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font: inherit;
-}
-
-.form-error {
-  margin-top: 0.75rem;
+.quantity-field {
+  width: 100%;
 }

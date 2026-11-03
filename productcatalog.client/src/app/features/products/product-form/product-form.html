@@ -1,92 +1,104 @@
-<a routerLink="/products" class="back-link">← Back to products</a>
+<a matButton routerLink="/products" class="back-link">
+  <mat-icon>arrow_back</mat-icon>
+  Back to products
+</a>
 
-<h2>{{ isEditMode ? 'Edit product' : 'New product' }}</h2>
+<h2 class="page-title">{{ isEditMode ? 'Edit product' : 'New product' }}</h2>
 
 @if (loadError()) {
   <p class="state state-error">{{ loadError() }}</p>
 } @else if (loading()) {
-  <p class="state">Loading product...</p>
+  <div class="state">
+    <mat-spinner diameter="40" aria-label="Loading product" />
+  </div>
 } @else {
-  <form class="product-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
-    @if (serverError()) {
-      <p class="form-error">{{ serverError() }}</p>
-    }
-
-    <label class="field">
-      <span>Name *</span>
-      <input type="text" formControlName="name" [maxlength]="limits.nameMaxLength" />
-      @if (fieldError('name'); as message) {
-        <small class="field-error">{{ message }}</small>
-      }
-    </label>
-
-    <label class="field">
-      <span>Description</span>
-      <textarea
-        formControlName="description"
-        rows="4"
-        [maxlength]="limits.descriptionMaxLength"
-      ></textarea>
-      <small class="hint">
-        {{ form.controls.description.value.length }} / {{ limits.descriptionMaxLength }}
-      </small>
-      @if (fieldError('description'); as message) {
-        <small class="field-error">{{ message }}</small>
-      }
-    </label>
-
-    <div class="field-row">
-      <label class="field">
-        <span>Price (€) *</span>
-        <input
-          #priceInput
-          type="number"
-          formControlName="price"
-          step="0.05"
-          min="0"
-          inputmode="decimal"
-          (wheel)="priceInput.blur()"
-        />
-        @if (fieldError('price'); as message) {
-          <small class="field-error">{{ message }}</small>
+  <mat-card class="form-card">
+    <mat-card-content>
+      <form class="product-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        @if (serverError()) {
+          <p class="form-error" role="alert">{{ serverError() }}</p>
         }
-      </label>
 
-      @if (isEditMode) {
-        <div class="field">
-          <span>Stock</span>
-          <p class="readonly-value">{{ currentStock() }}</p>
-          <small class="hint">Change stock with the stock actions on the product list.</small>
-        </div>
-      } @else {
-        <label class="field">
-          <span>Initial stock *</span>
-          <input type="number" formControlName="stockQuantity" step="1" [min]="limits.stockMin" />
-          @if (fieldError('stockQuantity'); as message) {
-            <small class="field-error">{{ message }}</small>
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" [maxlength]="limits.nameMaxLength" />
+          @if (fieldError('name'); as message) {
+            <mat-error>{{ message }}</mat-error>
           }
-        </label>
-      }
-    </div>
+        </mat-form-field>
 
-    <label class="field">
-      <span>Category *</span>
-      <select formControlName="categoryId">
-        <option [ngValue]="null" disabled>Select a category</option>
-        @for (category of categories(); track category.id) {
-          <option [ngValue]="category.id">{{ category.name }}</option>
-        }
-      </select>
-      @if (fieldError('categoryId'); as message) {
-        <small class="field-error">{{ message }}</small>
-      }
-    </label>
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            rows="4"
+            [maxlength]="limits.descriptionMaxLength"
+          ></textarea>
+          <mat-hint align="end">
+            {{ form.controls.description.value.length }} / {{ limits.descriptionMaxLength }}
+          </mat-hint>
+          @if (fieldError('description'); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
 
-    <div class="form-actions">
-      <a routerLink="/products" class="button-secondary">Cancel</a>
-      <button type="submit" class="button-primary" [disabled]="saving()">
-        {{ saving() ? 'Saving...' : isEditMode ? 'Save changes' : 'Create product' }}
-      </button>
-    </div>
-  </form>
+        <div class="field-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Price</mat-label>
+            <input
+              matInput
+              #priceInput
+              type="number"
+              formControlName="price"
+              step="0.05"
+              min="0"
+              inputmode="decimal"
+              (wheel)="priceInput.blur()"
+            />
+            <span matTextSuffix>€</span>
+            @if (fieldError('price'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>{{ isEditMode ? 'Stock' : 'Initial stock' }}</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="stockQuantity"
+              step="1"
+              [min]="limits.stockMin"
+            />
+            @if (isEditMode) {
+              <mat-hint>Change stock from the product list.</mat-hint>
+            }
+            @if (fieldError('stockQuantity'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="categoryId">
+            @for (category of categories(); track category.id) {
+              <mat-option [value]="category.id">{{ category.name }}</mat-option>
+            }
+          </mat-select>
+          @if (fieldError('categoryId'); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="form-actions">
+          <a matButton routerLink="/products">Cancel</a>
+          <button matButton="filled" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving...' : isEditMode ? 'Save changes' : 'Create product' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 }

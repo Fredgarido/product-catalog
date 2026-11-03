@@ -8,13 +8,11 @@
   <ng-content />
 
   <div class="dialog-actions">
-    <button type="button" class="button-secondary" [disabled]="busy()" (click)="cancelled.emit()">
-      Cancel
-    </button>
+    <button matButton type="button" [disabled]="busy()" (click)="cancelled.emit()">Cancel</button>
     <button
+      matButton="filled"
       type="button"
-      [class.button-primary]="variant() === 'primary'"
-      [class.button-danger]="variant() === 'danger'"
+      [class.danger]="variant() === 'danger'"
       [disabled]="busy()"
       (click)="confirmed.emit()"
     >

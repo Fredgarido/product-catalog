@@ -1,15 +1,22 @@
 <div class="page-header">
-  <h2>Products</h2>
-  @if (!loading() && !error() && !rangeError()) {
-    <p class="summary">{{ products().length }} products · {{ totalStock() }} units in stock</p>
-  }
-  <a routerLink="/products/new" class="button-primary">New product</a>
+  <div>
+    <h2 class="page-title">Products</h2>
+    @if (!loading() && !error() && !rangeError()) {
+      <p class="summary">{{ products().length }} products · {{ totalStock() }} units in stock</p>
+    }
+  </div>
+  <a matButton="filled" routerLink="/products/new">
+    <mat-icon>add</mat-icon>
+    New product
+  </a>
 </div>
 
 <div class="filters">
-  <label class="filter filter-search">
-    <span>Search by name</span>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-search">
+    <mat-label>Search by name</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
     <input
+      matInput
       #searchInput
       type="search"
       placeholder="e.g. lens"
@@ -17,11 +24,12 @@
       [value]="searchTerm()"
       (input)="searchTerm.set(searchInput.value)"
     />
-  </label>
+  </mat-form-field>
 
-  <label class="filter">
-    <span>Min stock</span>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-stock">
+    <mat-label>Min stock</mat-label>
     <input
+      matInput
       #minInput
       type="number"
       min="0"
@@ -29,11 +37,12 @@
       [value]="minStock() ?? ''"
       (input)="setMinStock(minInput.value)"
     />
-  </label>
+  </mat-form-field>
 
-  <label class="filter">
-    <span>Max stock</span>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-stock">
+    <mat-label>Max stock</mat-label>
     <input
+      matInput
       #maxInput
       type="number"
       min="0"
@@ -41,82 +50,110 @@
       [value]="maxStock() ?? ''"
       (input)="setMaxStock(maxInput.value)"
     />
-  </label>
+  </mat-form-field>
 
   <div class="filter-actions">
-    <button type="button" (click)="showLowStock()">Low stock</button>
-    <button type="button" (click)="clearFilters()" [disabled]="!hasActiveFilters()">Clear</button>
+    <button matButton="outlined" type="button" (click)="showLowStock()">Low stock</button>
+    <button matButton type="button" (click)="clearFilters()" [disabled]="!hasActiveFilters()">
+      Clear
+    </button>
   </div>
 </div>
 
 @if (rangeError()) {
   <p class="state state-error">{{ rangeError() }}</p>
 } @else if (loading()) {
-  <p class="state">Loading products...</p>
+  <div class="state">
+    <mat-spinner diameter="40" aria-label="Loading products" />
+  </div>
 } @else if (error()) {
   <div class="state state-error">
     <p>{{ error() }}</p>
-    <button type="button" (click)="retry()">Retry</button>
+    <button matButton="outlined" type="button" (click)="retry()">
+      <mat-icon>refresh</mat-icon>
+      Retry
+    </button>
   </div>
 } @else {
-  <table class="product-table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Category</th>
-        <th class="numeric">Price</th>
-        <th class="numeric">Stock</th>
-        <th>Last updated</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (product of products(); track product.id) {
+  <div class="table-wrapper">
+    <table class="product-table" aria-label="Products">
+      <thead>
         <tr>
-          <td>{{ product.id }}</td>
-          <td>
-            <div class="product-name">{{ product.name }}</div>
-            @if (product.description) {
-              <div class="product-description">{{ product.description }}</div>
-            }
-          </td>
-          <td>{{ product.categoryName }}</td>
-          <td class="numeric">{{ product.price | currency: 'EUR' }}</td>
-          <td class="numeric">
-            <span
-              class="stock"
-              [class.stock-out]="product.stockQuantity === 0"
-              [class.stock-low]="
-                product.stockQuantity > 0 && product.stockQuantity <= lowStockThreshold
-              "
-            >
-              {{ product.stockQuantity }}
-            </span>
-          </td>
-          <td>{{ product.updatedAt | date: 'medium' }}</td>
-          <td>
-            <div class="actions">
-              <a [routerLink]="['/products', product.id, 'edit']" class="action-link">Edit</a>
-              <button type="button" class="action-link" (click)="stockProduct.set(product)">
-                Stock
-              </button>
-              <button type="button" class="action-link action-danger" (click)="askDelete(product)">
-                Delete
-              </button>
-            </div>
-          </td>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th class="numeric">Price</th>
+          <th class="numeric">Stock</th>
+          <th>Last updated</th>
+          <th class="actions">Actions</th>
         </tr>
-      } @empty {
-        <tr>
-          <td colspan="7" class="state">
-            {{ hasActiveFilters() ? 'No products match your filters.' : 'No products found.' }}
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (product of products(); track product.id) {
+          <tr>
+            <td>{{ product.id }}</td>
+            <td>
+              <div class="product-name">{{ product.name }}</div>
+              @if (product.description) {
+                <div class="product-description">{{ product.description }}</div>
+              }
+            </td>
+            <td>{{ product.categoryName }}</td>
+            <td class="numeric">{{ product.price | currency: 'EUR' }}</td>
+            <td class="numeric">
+              <span
+                class="stock"
+                [class.stock-out]="product.stockQuantity === 0"
+                [class.stock-low]="
+                  product.stockQuantity > 0 && product.stockQuantity <= lowStockThreshold
+                "
+              >
+                {{ product.stockQuantity }}
+              </span>
+            </td>
+            <td>{{ product.updatedAt | date: 'medium' }}</td>
+            <td class="actions">
+              <a
+                matIconButton
+                [routerLink]="['/products', product.id, 'edit']"
+                matTooltip="Edit"
+                [attr.aria-label]="'Edit ' + product.name"
+              >
+                <mat-icon>edit</mat-icon>
+              </a>
+              <button
+                matIconButton
+                type="button"
+                matTooltip="Adjust stock"
+                [attr.aria-label]="'Adjust stock of ' + product.name"
+                (click)="stockProduct.set(product)"
+              >
+                <mat-icon>inventory_2</mat-icon>
+              </button>
+              <button
+                matIconButton
+                type="button"
+                class="delete-button"
+                matTooltip="Delete"
+                [attr.aria-label]="'Delete ' + product.name"
+                (click)="askDelete(product)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="empty-row">
+              {{ hasActiveFilters() ? 'No products match your filters.' : 'No products found.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }
+
 <app-stock-dialog
   [product]="stockProduct()"
   (stockChanged)="onStockChanged($event)"

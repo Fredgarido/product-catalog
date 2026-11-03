@@ -1,8 +1,9 @@
 import { Component, ElementRef, afterRenderEffect, input, output, viewChild } from '@angular/core'
+import { MatButton } from '@angular/material/button'
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [],
+  imports: [MatButton],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
 })

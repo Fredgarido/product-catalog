@@ -1,6 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http'
 import { Component, effect, inject, input, output, signal, untracked } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
+import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle'
+import { MatError, MatFormField, MatLabel } from '@angular/material/form-field'
+import { MatInput } from '@angular/material/input'
 import { ProblemDetails } from '../../../core/models/problem-details'
 import { Product } from '../../../core/models/product'
 import { productConstraints as limits } from '../../../core/models/product-constraints'
@@ -11,7 +14,16 @@ type StockMode = 'add' | 'remove'
 
 @Component({
   selector: 'app-stock-dialog',
-  imports: [ReactiveFormsModule, ConfirmDialog],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonToggle,
+    MatButtonToggleGroup,
+    MatError,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    ConfirmDialog,
+  ],
   templateUrl: './stock-dialog.html',
   styleUrl: './stock-dialog.css',
 })

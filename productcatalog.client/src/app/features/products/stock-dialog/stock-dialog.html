@@ -7,23 +7,32 @@
   (confirmed)="apply()"
   (cancelled)="closed.emit()"
 >
-  <div class="mode-toggle" role="group" aria-label="Stock operation">
-    <button type="button" [class.active]="mode() === 'add'" (click)="mode.set('add')">Add</button>
-    <button type="button" [class.active]="mode() === 'remove'" (click)="mode.set('remove')">
-      Remove
-    </button>
-  </div>
+  <mat-button-toggle-group
+    class="mode-toggle"
+    aria-label="Stock operation"
+    [value]="mode()"
+    (change)="mode.set($event.value)"
+  >
+    <mat-button-toggle value="add">Add</mat-button-toggle>
+    <mat-button-toggle value="remove">Remove</mat-button-toggle>
+  </mat-button-toggle-group>
 
-  <label class="field">
-    <span>Quantity</span>
-    <input type="number" min="1" step="1" [max]="limits.stockMax" [formControl]="quantity" />
-  </label>
-
-  @if (quantity.touched && quantity.invalid) {
-    <small class="field-error">Enter a whole number between 1 and {{ limits.stockMax }}.</small>
-  }
+  <mat-form-field appearance="outline" class="quantity-field">
+    <mat-label>Quantity</mat-label>
+    <input
+      matInput
+      type="number"
+      min="1"
+      step="1"
+      [max]="limits.stockMax"
+      [formControl]="quantity"
+    />
+    @if (quantity.invalid) {
+      <mat-error>Enter a whole number between 1 and {{ limits.stockMax }}.</mat-error>
+    }
+  </mat-form-field>
 
   @if (error()) {
-    <p class="form-error">{{ error() }}</p>
+    <p class="form-error" role="alert">{{ error() }}</p>
   }
 </app-confirm-dialog>
