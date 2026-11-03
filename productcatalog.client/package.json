@@ -23,7 +23,6 @@
     "@angular/material": "~22.2.5",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
-    "jest-editor-support": "*",
     "run-script-os": "*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
