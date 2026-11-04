@@ -102,7 +102,7 @@ Run only SQL Server in Docker, and point the API at it with an environment varia
 
 On Apple Silicon Macs, the SQL Server image runs through emulation: enable *Use Rosetta for x86_64/amd64 emulation* in Docker Desktop's settings.
 
-The backend tests still need LocalDB (see [Possible next steps](#possible-next-steps)).
+To run the backend tests against this container, see [Running the tests](#running-the-tests).
 
 ### API documentation
 
@@ -115,7 +115,7 @@ While the API runs in Development:
 ## Running the tests
 
 ```bash
-# Backend: 10 xUnit integration tests (needs LocalDB)
+# Backend: 10 xUnit integration tests (LocalDB by default)
 dotnet test
 
 # Frontend: 28 Vitest unit tests
@@ -123,7 +123,25 @@ cd productcatalog.client
 npx ng test --watch=false
 ```
 
-The backend tests run against a **real SQL Server database**: each test class creates a throwaway LocalDB database with a random name, applies the migrations, and deletes it afterwards. This tests the actual SQL behaviour (sequence IDs, atomic stock updates, concurrency), which an in-memory provider can't reproduce.
+The backend tests run against a **real SQL Server database**: each test class creates a throwaway database with a random name, applies the migrations, and deletes it afterwards. This tests the actual SQL behaviour (sequence IDs, atomic stock updates, concurrency), which an in-memory provider can't reproduce.
+
+### Backend tests without LocalDB
+
+Start SQL Server in Docker (steps 1 and 2 of [Without LocalDB](#without-localdb-macos-linux)), then point the tests at it with the `TEST_SQL_SERVER` environment variable. Leave the database name out: each test run creates its own.
+
+macOS / Linux:
+
+```bash
+export TEST_SQL_SERVER="Server=localhost,1433;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+dotnet test
+```
+
+Windows (PowerShell):
+
+```powershell
+$env:TEST_SQL_SERVER = "Server=localhost,1433;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+dotnet test
+```
 
 ## API
 
@@ -224,7 +242,6 @@ The browser only ever talks to one origin: in development, the Angular dev serve
 - Authentication and authorization
 - Pagination and server-side sorting for large catalogs
 - Optimistic concurrency on `PUT` (a `rowversion` column), so concurrent edits are detected instead of last-write-wins
-- Running the backend tests against a SQL Server container, so they also run on macOS and Linux and in CI
 
 ## Project structure
 
