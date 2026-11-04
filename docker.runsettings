@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <TEST_SQL_SERVER>Server=localhost,14330;User Id=sa;Password=Your_password123;TrustServerCertificate=True</TEST_SQL_SERVER>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

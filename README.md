@@ -69,40 +69,33 @@ On the first run in Development, the API **creates the database, applies the mig
 
 Run only SQL Server in Docker, and point the API at it with an environment variable. No code changes are needed: the variable overrides the connection string in `appsettings.json`, and the database is created and seeded on startup as usual.
 
-1. Start SQL Server:
+1. Start SQL Server. The command returns once the database is ready:
 
    ```bash
-   docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Your_password123" \
-     -p 1433:1433 -d --name productcatalog-sql mcr.microsoft.com/mssql/server:2022-latest
+   docker compose up -d --wait db
    ```
 
-2. Wait until it's ready (10–30 seconds). Otherwise the API can't connect and stops on startup:
-
-   ```bash
-   docker logs -f productcatalog-sql
-   ```
-
-   When *"SQL Server is now ready for client connections"* appears, press **Ctrl + C**.
-
-3. Set the connection string and run the API.
+2. Set the connection string and run the API.
 
    macOS / Linux:
 
    ```bash
-   export ConnectionStrings__DefaultConnection="Server=localhost,1433;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+   export ConnectionStrings__DefaultConnection="Server=localhost,14330;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
    dotnet run --project ProductCatalog.Server --launch-profile https
    ```
 
    Windows (PowerShell):
 
    ```powershell
-   $env:ConnectionStrings__DefaultConnection = "Server=localhost,1433;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
+   $env:ConnectionStrings__DefaultConnection = "Server=localhost,14330;Database=ProductCatalogDb;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
    dotnet run --project ProductCatalog.Server --launch-profile https
    ```
 
-On Apple Silicon Macs, the SQL Server image runs through emulation: enable *Use Rosetta for x86_64/amd64 emulation* in Docker Desktop's settings.
+3. When you're done, remove the database container with `docker compose down -v`.
 
-To run the backend tests against this container, see [Running the tests](#running-the-tests).
+The database is published on port **14330** (not the usual 1433), so it doesn't clash with a SQL Server already installed on your machine.
+
+On Apple Silicon Macs, the SQL Server image runs through emulation: enable *Use Rosetta for x86_64/amd64 emulation* in Docker Desktop's settings.
 
 ### API documentation
 
@@ -127,21 +120,14 @@ The backend tests run against a **real SQL Server database**: each test class cr
 
 ### Backend tests without LocalDB
 
-Start SQL Server in Docker (steps 1 and 2 of [Without LocalDB](#without-localdb-macos-linux)), then point the tests at it with the `TEST_SQL_SERVER` environment variable. Leave the database name out: each test run creates its own.
-
-macOS / Linux:
+On any OS with Docker, two commands run the backend tests against SQL Server in a container:
 
 ```bash
-export TEST_SQL_SERVER="Server=localhost,1433;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
-dotnet test
+docker compose up -d --wait db
+dotnet test --settings docker.runsettings
 ```
 
-Windows (PowerShell):
-
-```powershell
-$env:TEST_SQL_SERVER = "Server=localhost,1433;User Id=sa;Password=Your_password123;TrustServerCertificate=True"
-dotnet test
-```
+`docker.runsettings` sets the `TEST_SQL_SERVER` environment variable for that test run only, pointing the tests at the container. When you're done, remove the container with `docker compose down -v`.
 
 ## API
 
@@ -249,6 +235,7 @@ The browser only ever talks to one origin: in development, the Angular dev serve
 ProductCatalog.slnx
 ├── Dockerfile                       builds Angular and the API into one image
 ├── docker-compose.yml               SQL Server + the application
+├── docker.runsettings              runs the backend tests against the Docker database
 ├── ProductCatalog.Server/           ASP.NET Core Web API
 │   ├── Controllers/                 HTTP endpoints
 │   ├── Services/                    business logic
