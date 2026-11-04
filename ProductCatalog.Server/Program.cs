@@ -25,7 +25,10 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+var applyMigrations = app.Environment.IsDevelopment()
+    || app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup");
+
+if (applyMigrations)
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

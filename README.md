@@ -11,7 +11,27 @@ A product management application: an **ASP.NET Core Web API** with full CRUD and
 
 ## Getting started
 
-### Prerequisites
+There are two ways to run the project: **Docker** (nothing to install except Docker) or a **local development setup**.
+
+### Option 1: Docker (any OS)
+
+With [Docker](https://www.docker.com/products/docker-desktop/) installed, from the repository root:
+
+```bash
+docker compose up --build
+```
+
+Then open **http://localhost:8080**.
+
+This starts SQL Server and the application. The app waits until the database is healthy, then applies the migrations and seeds the sample data. The first build takes a few minutes.
+
+- Stop with `docker compose down` (add `-v` to also delete the database).
+- If port 8080 is already in use, change the first number in `docker-compose.yml` (for example `"5000:8080"`) and open http://localhost:5000 instead.
+- The container runs in Production mode, so Scalar and the OpenAPI document aren't exposed. Use the local setup to browse the API docs.
+
+### Option 2: Local development
+
+#### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Node.js](https://nodejs.org/) 22.22+ or 24.15+
@@ -24,7 +44,7 @@ The first time, trust the ASP.NET Core development certificate (both the API and
 dotnet dev-certs https --trust
 ```
 
-### Run with Visual Studio
+#### Run with Visual Studio
 
 1. Open `ProductCatalog.slnx`.
 2. Right-click the solution → **Configure Startup Projects** → **Multiple startup projects**, and set both **ProductCatalog.Server** and **productcatalog.client** to **Start**.
@@ -32,7 +52,7 @@ dotnet dev-certs https --trust
 
 The app opens at **https://localhost:65117**.
 
-### Run from the command line
+#### Run from the command line
 
 ```bash
 cd productcatalog.client
@@ -45,9 +65,9 @@ Then open **https://localhost:65117**.
 
 On the first run in Development, the API **creates the database, applies the migrations and seeds sample data** (4 categories, 12 products). No manual database step is needed.
 
-### Without LocalDB (macOS, Linux, or Windows with Docker)
+#### Without LocalDB (macOS, Linux)
 
-Run SQL Server in Docker and point the API at it with an environment variable. No code changes are needed: the variable overrides the connection string in `appsettings.json`, and the database is created and seeded on startup as usual.
+Run only SQL Server in Docker, and point the API at it with an environment variable. No code changes are needed: the variable overrides the connection string in `appsettings.json`, and the database is created and seeded on startup as usual.
 
 1. Start SQL Server:
 
@@ -168,7 +188,7 @@ Requests flow through **Controller → Service → Repository → Database**, an
 - **Repositories have intention-revealing methods** (`TryDecrementStockAsync`, `GetByStockLevelAsync`) rather than a generic CRUD interface, so EF Core features such as `ExecuteUpdateAsync` stay available where they matter. The atomic stock update lives in the repository, because atomicity is a data-access guarantee; what a failed decrement *means* (404 or 409) is decided in the service.
 - **Repositories return entities; services map them to DTOs**, so the database shape never leaks into the API contract.
 - **A global exception handler** turns business-rule exceptions into 400 or 409 responses, and anything unexpected into a generic 500 that doesn't expose internal details.
-- **Migrations are applied at startup in Development only.** In production they would run as a deployment step.
+- **Migrations are applied at startup** in Development, or when `Database:ApplyMigrationsOnStartup` is `true` (as in `docker-compose.yml`). In a real production deployment they would run as a pipeline step instead.
 
 ### Why a repository layer
 
@@ -191,7 +211,8 @@ Trade-offs accepted:
 - **The filters form one reactive pipeline** (signals → `toObservable` → `debounceTime` → `switchMap`): typing fires one request after a pause, and an outdated response can never overwrite a newer one.
 - **Combined name and stock filters:** the API has no endpoint that takes both, so the app calls `search` and applies the stock range in the browser. With a single filter, it uses the matching endpoint directly.
 - **Reactive forms** mirror the server's validation rules, and server validation errors are shown under the matching field.
-- **Retry interceptor:** GET requests are retried with increasing delays on network errors and 502/503/504. This covers the API still starting (applying migrations) when the frontend first loads. Other methods are never retried, so a product can't be created twice.
+- **Waiting for the API at startup:** in development, the dev-server proxy (`proxy.conf.js`) holds `/api` requests until the API accepts connections, so the first page load doesn't fail while the API is still applying migrations.
+- **Retry interceptor:** GET requests are retried with increasing delays on network errors and 502/503/504, covering brief outages such as the API restarting or a deployment in progress. Other methods are never retried, so a product can't be created twice.
 - **Angular Material** for components, theming and accessibility. The product table is a plain `<table>` with `@for`, which keeps the template fully type-checked (sorting and pagination, the main reasons for `mat-table`, aren't needed here).
 
 ### No CORS configuration
@@ -209,6 +230,8 @@ The browser only ever talks to one origin: in development, the Angular dev serve
 
 ```
 ProductCatalog.slnx
+├── Dockerfile                       builds Angular and the API into one image
+├── docker-compose.yml               SQL Server + the application
 ├── ProductCatalog.Server/           ASP.NET Core Web API
 │   ├── Controllers/                 HTTP endpoints
 │   ├── Services/                    business logic

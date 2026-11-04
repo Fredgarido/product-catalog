@@ -38,12 +38,13 @@ public sealed class ProductsController : ControllerBase
     /// Searches products whose name contains the given text (case-insensitive, partial match).
     /// </summary>
     /// <param name="name">Text to search for, for example "lens".</param>
+    /// <param name="cancellationToken">Cancels the search if the client disconnects.</param>
     [HttpGet("search")]
     [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IReadOnlyList<ProductDto>>> Search(
-    [FromQuery, Required, StringLength(100)] string name,
-    CancellationToken cancellationToken)
+        [FromQuery, Required, StringLength(100)] string name,
+        CancellationToken cancellationToken)
     {
         var products = await _productService.SearchByNameAsync(name, cancellationToken);
         return Ok(products);
@@ -87,9 +88,9 @@ public sealed class ProductsController : ControllerBase
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProductDto>> AddToStock(
-    int id,
-    [Range(1, 1_000_000)] int quantity,
-    CancellationToken cancellationToken)
+        int id,
+        [Range(1, 1_000_000)] int quantity,
+        CancellationToken cancellationToken)
     {
         var product = await _productService.AddStockAsync(id, quantity, cancellationToken);
         return product is null ? NotFound() : Ok(product);

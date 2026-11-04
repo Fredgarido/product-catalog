@@ -22,9 +22,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.18.7" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="Exists('..\productcatalog.client\productcatalog.client.esproj')">
     <ProjectReference Include="..\productcatalog.client\productcatalog.client.esproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
