@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ProductCatalog.Server.Data;
 using ProductCatalog.Server.Entities;
 
@@ -7,24 +6,10 @@ namespace ProductCatalog.Server.Tests;
 
 public sealed class DatabaseFixture : IDisposable
 {
-    private const string LocalDbServer =
-        @"Server=(localdb)\MSSQLLocalDB;Trusted_Connection=True;TrustServerCertificate=True";
-
-    private readonly string _connectionString;
+    private readonly string _connectionString = TestDatabase.CreateConnectionString();
 
     public DatabaseFixture()
     {
-        var server = Environment.GetEnvironmentVariable("TEST_SQL_SERVER");
-        if (string.IsNullOrWhiteSpace(server))
-        {
-            server = LocalDbServer;
-        }
-
-        _connectionString = new SqlConnectionStringBuilder(server)
-        {
-            InitialCatalog = $"ProductCatalogTests_{Guid.NewGuid():N}"
-        }.ConnectionString;
-
         using var context = CreateContext();
         context.Database.Migrate();
 

@@ -7,7 +7,7 @@ A product management application: an **ASP.NET Core Web API** with full CRUD and
 | API | ASP.NET Core (.NET 10), controllers, ProblemDetails, OpenAPI + Scalar |
 | Data | Entity Framework Core 10, SQL Server (LocalDB), code-first migrations, seeding |
 | Frontend | Angular 22 (standalone components, signals, zoneless), Angular Material |
-| Tests | xUnit (10 integration tests), Vitest (28 unit tests) |
+| Tests | xUnit (11 unit + 23 integration), Vitest (28 unit), Playwright (1 end-to-end) |
 
 ## Getting started
 
@@ -108,15 +108,30 @@ While the API runs in Development:
 ## Running the tests
 
 ```bash
-# Backend: 10 xUnit integration tests (LocalDB by default)
+# Backend: 34 xUnit tests (the integration tests use LocalDB by default)
 dotnet test
 
 # Frontend: 28 Vitest unit tests
 cd productcatalog.client
+npm install
 npx ng test --watch=false
 ```
 
-The backend tests run against a **real SQL Server database**: each test class creates a throwaway database with a random name, applies the migrations, and deletes it afterwards. This tests the actual SQL behaviour (sequence IDs, atomic stock updates, concurrency), which an in-memory provider can't reproduce.
+The suite follows the testing pyramid: many fast unit tests, integration tests only where a real database or real HTTP is needed, and one end-to-end test across the whole system.
+
+| Layer | Tests | Covers |
+|---|---|---|
+| End-to-end | 1 | the main user flow in a real browser, through Angular, the API and SQL Server |
+| Integration | 23 | SQL behaviour and the HTTP API (see below) |
+| Unit | 39 | backend business rules (11) and the Angular frontend (28) |
+
+The backend tests come in three groups. The unit tests use fake repositories (NSubstitute) and need no database. The integration tests run against a **real SQL Server database**: each test class creates a throwaway database with a random name, applies the migrations, and deletes it afterwards, which tests the actual SQL behaviour that an in-memory provider can't reproduce.
+
+| Test class | Type | What it covers |
+|---|---|---|
+| `ProductServiceUnitTests` (11) | Unit | The service's business rules: trimming input, a blank description stored as no description, unknown categories rejected with nothing saved, "not found" vs "insufficient stock", updates never touching stock, the search term trimmed |
+| `ProductServiceTests` (8) | Integration | Database behaviour: 6-digit IDs, **50 parallel creates never get a duplicate ID**, atomic stock updates, **20 parallel decrements never oversell**, case-insensitive search, inclusive stock range |
+| `ProductsApiTests` (15) | Integration | The HTTP API through real requests: **validation returns 400** for missing or invalid fields, 201 with a `Location` header, 204, 404, and 409 for insufficient stock |
 
 ### Backend tests without LocalDB
 
@@ -128,6 +143,19 @@ dotnet test --settings docker.runsettings
 ```
 
 `docker.runsettings` sets the `TEST_SQL_SERVER` environment variable for that test run only, pointing the tests at the container. When you're done, remove the container with `docker compose down -v`.
+
+### End-to-end test
+
+The end-to-end test opens the app in a real (headless) browser and goes through the main flow: it creates a product through the form, checks it in the list, removes stock through the stock dialog, and deletes it. It's the only test that runs the frontend, the API and the database together, so it catches mismatches between them, such as a field renamed in the API's JSON.
+
+With the app running in Docker (`docker compose up --build`), from `productcatalog.client`:
+
+```bash
+npx playwright install chromium
+npm run e2e
+```
+
+The first command downloads the browser and is only needed once. To test the app at another address, set `E2E_BASE_URL` (for example `https://localhost:65117` for the local setup).
 
 ## API
 
@@ -206,7 +234,7 @@ Trade-offs accepted:
 
 - More code: an interface and a class per entity.
 - Reads load full entities (with their category) instead of selecting only the columns the DTO needs. The difference is negligible at this size, and a dedicated read query could be added if it ever mattered.
-- The backend tests remain integration tests against SQL Server: the concurrency guarantees are enforced by the database, so a fake repository couldn't prove them.
+- The repositories make the business rules unit-testable with fakes, but the concurrency guarantees are enforced by the database, so those stay as integration tests against SQL Server.
 
 ### Frontend
 
@@ -247,8 +275,9 @@ ProductCatalog.slnx
 │   ├── Exceptions/                  business-rule exceptions
 │   ├── ErrorHandling/               global exception → ProblemDetails
 │   └── Migrations/                  EF Core migrations
-├── ProductCatalog.Server.Tests/     xUnit integration tests
+├── ProductCatalog.Server.Tests/     xUnit tests (services and HTTP API)
 └── productcatalog.client/           Angular application
+    ├── e2e/                         Playwright end-to-end test
     └── src/app/
         ├── core/                    models, API services, retry interceptor
         ├── features/products/       product list, form and stock dialog
