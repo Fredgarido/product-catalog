@@ -79,17 +79,34 @@
     <table class="product-table" aria-label="Products">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Category</th>
-          <th class="numeric">Price</th>
-          <th class="numeric">Stock</th>
+          @for (column of sortableColumns; track column.key) {
+            @let direction = sortDirection(column.key);
+            <th
+              [class.numeric]="column.numeric"
+              [attr.aria-sort]="
+                direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : null
+              "
+            >
+              <button type="button" class="sort-button" (click)="sortBy(column.key)">
+                {{ column.label }}
+                <mat-icon class="sort-icon" [class.sort-icon-active]="direction">
+                  {{
+                    direction === 'asc'
+                      ? 'arrow_upward'
+                      : direction === 'desc'
+                        ? 'arrow_downward'
+                        : 'swap_vert'
+                  }}
+                </mat-icon>
+              </button>
+            </th>
+          }
           <th>Last updated</th>
           <th class="actions">Actions</th>
         </tr>
       </thead>
       <tbody>
-        @for (product of products(); track product.id) {
+        @for (product of sortedProducts(); track product.id) {
           <tr>
             <td>{{ product.id }}</td>
             <td>

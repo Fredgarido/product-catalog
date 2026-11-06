@@ -82,6 +82,14 @@ describe('ProductList', () => {
     fixture.detectChanges()
   }
 
+  function clickHeader(label: string): void {
+    const headers = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('th button'),
+    )
+    headers.find((header) => header.textContent?.includes(label))!.click()
+    fixture.detectChanges()
+  }
+
   function shownNames(): string[] {
     return Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('.product-name')).map(
       (name) => name.textContent!.trim(),
@@ -132,6 +140,24 @@ describe('ProductList', () => {
     expect(productApi.search).toHaveBeenCalledWith('lens')
     expect(productApi.getByStockLevel).not.toHaveBeenCalled()
     expect(shownNames()).toEqual(['Lens Cap', 'Lens Cloth'])
+  })
+
+  it('sorts by a column and reverses the order on a second click', () => {
+    createComponent()
+
+    clickHeader('Stock')
+    expect(shownNames()).toEqual(['Lens Cloth', 'Lens Cap', 'Precision Lens'])
+
+    clickHeader('Stock')
+    expect(shownNames()).toEqual(['Precision Lens', 'Lens Cap', 'Lens Cloth'])
+  })
+
+  it('sorts text columns alphabetically', () => {
+    createComponent()
+
+    clickHeader('Name')
+
+    expect(shownNames()).toEqual(['Lens Cap', 'Lens Cloth', 'Precision Lens'])
   })
 
   it('removes a product whose new stock falls outside the stock filter', () => {

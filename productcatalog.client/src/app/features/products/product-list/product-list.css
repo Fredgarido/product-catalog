@@ -68,6 +68,29 @@
   font: var(--mat-sys-title-small);
 }
 
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sort-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  opacity: 0.35;
+}
+
+.sort-icon-active {
+  opacity: 1;
+}
+
 .product-table tbody tr:last-child td {
   border-bottom: none;
 }

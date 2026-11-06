@@ -22,12 +22,29 @@ interface ProductFilters {
   reloadCount: number
 }
 
+type SortColumn = 'id' | 'name' | 'categoryName' | 'price' | 'stockQuantity'
+type SortDirection = 'asc' | 'desc'
+
+interface SortState {
+  column: SortColumn
+  direction: SortDirection
+}
+
 const maxStockLevel = 2_147_483_647
 
 function isInStockRange(product: Product, { minStock, maxStock }: ProductFilters): boolean {
   return (
     product.stockQuantity >= (minStock ?? 0) && product.stockQuantity <= (maxStock ?? maxStockLevel)
   )
+}
+
+function compareBy(column: SortColumn, a: Product, b: Product): number {
+  const left = a[column]
+  const right = b[column]
+
+  return typeof left === 'string' && typeof right === 'string'
+    ? left.localeCompare(right)
+    : Number(left) - Number(right)
 }
 
 @Component({
@@ -64,6 +81,27 @@ export class ProductList {
   protected readonly products = signal<Product[]>([])
   protected readonly loading = signal(true)
   protected readonly error = signal<string | null>(null)
+
+  protected readonly sortableColumns: { key: SortColumn; label: string; numeric?: boolean }[] = [
+    { key: 'id', label: 'ID' },
+    { key: 'name', label: 'Name' },
+    { key: 'categoryName', label: 'Category' },
+    { key: 'price', label: 'Price', numeric: true },
+    { key: 'stockQuantity', label: 'Stock', numeric: true },
+  ]
+  protected readonly sort = signal<SortState | null>(null)
+
+  protected readonly sortedProducts = computed(() => {
+    const products = this.products()
+    const sort = this.sort()
+
+    if (!sort) {
+      return products
+    }
+
+    const direction = sort.direction === 'asc' ? 1 : -1
+    return [...products].sort((a, b) => direction * compareBy(sort.column, a, b))
+  })
 
   protected readonly totalStock = computed(() =>
     this.products().reduce((sum, product) => sum + product.stockQuantity, 0),
@@ -125,6 +163,18 @@ export class ProductList {
     this.searchTerm.set('')
     this.minStock.set(null)
     this.maxStock.set(null)
+  }
+
+  protected sortBy(column: SortColumn): void {
+    this.sort.update((current) => ({
+      column,
+      direction: current?.column === column && current.direction === 'asc' ? 'desc' : 'asc',
+    }))
+  }
+
+  protected sortDirection(column: SortColumn): SortDirection | null {
+    const sort = this.sort()
+    return sort?.column === column ? sort.direction : null
   }
 
   protected retry(): void {
