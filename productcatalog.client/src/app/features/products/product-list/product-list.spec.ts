@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
+import { By } from '@angular/platform-browser'
 import { provideRouter } from '@angular/router'
 import { of, throwError } from 'rxjs'
 import type { Mock } from 'vitest'
 import { Product } from '../../../core/models/product'
 import { ProductApi } from '../../../core/services/product-api'
+import { StockDialog } from '../stock-dialog/stock-dialog'
 import { ProductList } from './product-list'
 
 function makeProduct(id: number, name: string, stockQuantity: number): Product {
@@ -130,6 +132,19 @@ describe('ProductList', () => {
     expect(productApi.search).toHaveBeenCalledWith('lens')
     expect(productApi.getByStockLevel).not.toHaveBeenCalled()
     expect(shownNames()).toEqual(['Lens Cap', 'Lens Cloth'])
+  })
+
+  it('removes a product whose new stock falls outside the stock filter', () => {
+    productApi.getByStockLevel.mockReturnValue(of([products[1], products[2]]))
+    createComponent()
+    clickButton('Low stock')
+    waitForDebounce()
+
+    const stockDialog = fixture.debugElement.query(By.directive(StockDialog))
+    stockDialog.componentInstance.stockChanged.emit(makeProduct(100002, 'Lens Cap', 6))
+    fixture.detectChanges()
+
+    expect(shownNames()).toEqual(['Lens Cloth'])
   })
 
   it('shows an error and sends no request when min stock is greater than max', () => {

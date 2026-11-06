@@ -24,6 +24,12 @@ interface ProductFilters {
 
 const maxStockLevel = 2_147_483_647
 
+function isInStockRange(product: Product, { minStock, maxStock }: ProductFilters): boolean {
+  return (
+    product.stockQuantity >= (minStock ?? 0) && product.stockQuantity <= (maxStock ?? maxStockLevel)
+  )
+}
+
 @Component({
   selector: 'app-product-list',
   imports: [
@@ -126,8 +132,11 @@ export class ProductList {
   }
 
   protected onStockChanged(updated: Product): void {
+    const filters = this.filters()
     this.products.update((products) =>
-      products.map((product) => (product.id === updated.id ? updated : product)),
+      products
+        .map((product) => (product.id === updated.id ? updated : product))
+        .filter((product) => isInStockRange(product, filters)),
     )
     this.stockProduct.set(null)
   }
@@ -193,24 +202,17 @@ export class ProductList {
   }
 
   private fetchProducts(filters: ProductFilters): Observable<Product[]> {
-    const hasRange = filters.minStock !== null || filters.maxStock !== null
-    const min = filters.minStock ?? 0
-    const max = filters.maxStock ?? maxStockLevel
-
     if (filters.name) {
       return this.productApi
         .search(filters.name)
-        .pipe(
-          map((products) =>
-            hasRange
-              ? products.filter((p) => p.stockQuantity >= min && p.stockQuantity <= max)
-              : products,
-          ),
-        )
+        .pipe(map((products) => products.filter((product) => isInStockRange(product, filters))))
     }
 
-    if (hasRange) {
-      return this.productApi.getByStockLevel(min, max)
+    if (filters.minStock !== null || filters.maxStock !== null) {
+      return this.productApi.getByStockLevel(
+        filters.minStock ?? 0,
+        filters.maxStock ?? maxStockLevel,
+      )
     }
 
     return this.productApi.getAll()
