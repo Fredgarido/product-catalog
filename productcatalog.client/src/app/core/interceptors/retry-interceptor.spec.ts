@@ -111,12 +111,12 @@ describe('retryInterceptor', () => {
     expect(error?.status).toBe(503)
   })
 
-  it('gives up after 5 retries and reports the error', () => {
+  it('gives up after 7 retries and reports the error', () => {
     let error: HttpErrorResponse | undefined
     http.get(url).subscribe({ error: (e: HttpErrorResponse) => (error = e) })
 
     respondWithStatus(503)
-    for (let retry = 1; retry <= 5; retry++) {
+    for (let retry = 1; retry <= 7; retry++) {
       vi.advanceTimersByTime(1000 * retry)
       respondWithStatus(503)
     }

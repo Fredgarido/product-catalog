@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-lowest);
+  box-shadow: var(--mat-sys-level1);
+}
+
+.filter-search {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.filter-stock {
+  width: 8rem;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
